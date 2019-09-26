@@ -2,6 +2,7 @@
 This file is for models creation, which consults options
 and creates each encoder and decoder accordingly.
 """
+import fasttext
 import re
 import torch
 import torch.nn as nn
@@ -162,6 +163,11 @@ def build_base_model(model_opt, fields, gpu, checkpoint=None, gpu_id=None):
 
     decoder = build_decoder(model_opt, tgt_emb)
 
+    # FASTTEXT
+    ft_embedder = None
+    if model_opt.fasttext:
+        ft_embedder = fasttext.load_model(model_opt.fasttext)
+
     # Build NMTModel(= encoder + decoder).
     if gpu and gpu_id is not None:
         device = torch.device("cuda", gpu_id)
@@ -169,7 +175,7 @@ def build_base_model(model_opt, fields, gpu, checkpoint=None, gpu_id=None):
         device = torch.device("cuda")
     elif not gpu:
         device = torch.device("cpu")
-    model = onmt.models.NMTModel(encoder, decoder)
+    model = onmt.models.NMTModel(encoder, decoder, ft_embedder)
 
     # Build Generator.
     if not model_opt.copy_attn:

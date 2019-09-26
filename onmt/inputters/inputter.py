@@ -603,9 +603,8 @@ class OrderedIterator(torchtext.data.Iterator):
                     yield minibatch[0]
                 else:
                     yield torchtext.data.Batch(
-                        minibatch,
-                        self.dataset,
-                        self.device)
+                            minibatch, self.dataset, self.device
+                        ), minibatch
             if not self.repeat:
                 return
 

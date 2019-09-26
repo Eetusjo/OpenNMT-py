@@ -30,6 +30,9 @@ def model_opts(parser):
     group.add('--word_vec_size', '-word_vec_size', type=int, default=-1,
               help='Word embedding size for src and tgt.')
 
+    group.add('--fasttext', '-fasttext', type=str, default=None,
+              help="Path to fasttext model for on-the-fly OOV embeddings.")
+
     group.add('--share_decoder_embeddings', '-share_decoder_embeddings',
               action='store_true',
               help="Use a shared weight matrix for the input and "

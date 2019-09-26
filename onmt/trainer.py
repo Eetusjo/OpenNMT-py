@@ -162,11 +162,11 @@ class Trainer(object):
         for batch in iterator:
             batches.append(batch)
             if self.norm_method == "tokens":
-                num_tokens = batch.tgt[1:, :, 0].ne(
+                num_tokens = batch[0].tgt[1:, :, 0].ne(
                     self.train_loss.padding_idx).sum()
                 normalization += num_tokens.item()
             else:
-                normalization += batch.batch_size
+                normalization += batch[0].batch_size
             if len(batches) == self.accum_count:
                 yield batches, normalization
                 self.accum_count = self._accum_count(self.optim.training_step)
@@ -306,12 +306,14 @@ class Trainer(object):
             stats = onmt.utils.Statistics()
 
             for batch in valid_iter:
+                batch, raw_batch = batch
                 src, src_lengths = batch.src if isinstance(batch.src, tuple) \
                                    else (batch.src, None)
                 tgt = batch.tgt
 
                 # F-prop through the model.
-                outputs, attns = valid_model(src, tgt, src_lengths)
+                outputs, attns = valid_model(src, tgt, src_lengths,
+                                             raw=raw_batch, useft=True)
 
                 # Compute loss.
                 _, batch_stats = self.valid_loss(batch, outputs, attns)
@@ -333,6 +335,7 @@ class Trainer(object):
             self.optim.zero_grad()
 
         for k, batch in enumerate(true_batches):
+            batch, raw_batch = batch
             target_size = batch.tgt.size(0)
             # Truncated BPTT: reminder not compatible with accum > 1
             if self.trunc_size:
@@ -355,7 +358,8 @@ class Trainer(object):
                 # 2. F-prop all but generator.
                 if self.accum_count == 1:
                     self.optim.zero_grad()
-                outputs, attns = self.model(src, tgt, src_lengths, bptt=bptt)
+                outputs, attns = self.model(
+                    src, tgt, src_lengths, bptt=bptt, raw=raw_batch, useft=True)
                 bptt = True
 
                 # 3. Compute loss.

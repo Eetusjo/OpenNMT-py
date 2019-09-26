@@ -60,12 +60,15 @@ class RNNEncoder(EncoderBase):
             embeddings,
             opt.bridge)
 
-    def forward(self, src, lengths=None):
+    def forward(self, src, lengths=None, ft_emb=None, ft_mask=None):
         """See :func:`EncoderBase.forward()`"""
         self._check_args(src, lengths)
 
         emb = self.embeddings(src)
         # s_len, batch, emb_dim = emb.size()
+
+        if (ft_emb is not None) and (ft_mask is not None):
+            emb = emb*ft_mask + ft_emb*(1 - ft_mask)
 
         packed_emb = emb
         if lengths is not None and not self.no_pack_padded_seq:
