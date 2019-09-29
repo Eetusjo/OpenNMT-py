@@ -17,6 +17,7 @@ from onmt.translate.beam_search import BeamSearch
 from onmt.translate.random_sampling import RandomSampling
 from onmt.utils.misc import tile, set_random_seed
 from onmt.modules.copy_generator import collapse_copy_scores
+from onmt.modules import fasttext_embedder as fte
 
 
 def build_translator(opt, report_score=True, logger=None, out_file=None):
@@ -346,9 +347,9 @@ class Translator(object):
 
         start_time = time.time()
 
-        for batch in data_iter:
+        for batch, raw_batch in data_iter:
             batch_data = self.translate_batch(
-                batch, data.src_vocabs, attn_debug
+                batch, raw_batch, data.src_vocabs, attn_debug
             )
             translations = xlation_builder.from_batch(batch_data)
 
@@ -521,7 +522,7 @@ class Translator(object):
         results["attention"] = random_sampler.attention
         return results
 
-    def translate_batch(self, batch, src_vocabs, attn_debug):
+    def translate_batch(self, batch, raw_batch, src_vocabs, attn_debug):
         """Translate a batch of sentences."""
         with torch.no_grad():
             if self.beam_size == 1:
@@ -541,14 +542,26 @@ class Translator(object):
                     min_length=self.min_length,
                     ratio=self.ratio,
                     n_best=self.n_best,
-                    return_attention=attn_debug or self.replace_unk)
+                    return_attention=attn_debug or self.replace_unk,
+                    raw_batch=raw_batch)
 
-    def _run_encoder(self, batch):
+    def _run_encoder(self, batch, raw_batch=None):
         src, src_lengths = batch.src if isinstance(batch.src, tuple) \
                            else (batch.src, None)
 
+        if self.model.ft_embedder and raw_batch:
+            ft_embeddings, ft_mask = fte.get_ft_emb_and_mask(
+                src, raw_batch,
+                vec_dim=self.model.encoder.embeddings.__dict__["word_vec_size"],
+                embedder=self.model.ft_embedder,
+                device=src.device
+            )
+        else:
+            ft_embeddings, ft_mask = None, None
+
         enc_states, memory_bank, src_lengths = self.model.encoder(
-            src, src_lengths)
+            src, src_lengths, ft_emb=ft_embeddings, ft_mask=ft_mask
+        )
         if src_lengths is None:
             assert not isinstance(memory_bank, tuple), \
                 'Ensemble decoding only supported for text data'
@@ -623,7 +636,8 @@ class Translator(object):
             min_length=0,
             ratio=0.,
             n_best=1,
-            return_attention=False):
+            return_attention=False,
+            raw_batch=None):
         # TODO: support these blacklisted features.
         assert not self.dump_beam
 
@@ -633,7 +647,9 @@ class Translator(object):
         batch_size = batch.batch_size
 
         # (1) Run the encoder on the src.
-        src, enc_states, memory_bank, src_lengths = self._run_encoder(batch)
+        src, enc_states, memory_bank, src_lengths = self._run_encoder(
+            batch, raw_batch
+        )
         self.model.decoder.init_state(src, memory_bank, enc_states)
 
         results = {

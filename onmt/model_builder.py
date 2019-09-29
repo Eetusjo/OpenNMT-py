@@ -99,6 +99,9 @@ def load_test_model(opt, model_path=None):
     ArgumentParser.update_model_opts(model_opt)
     ArgumentParser.validate_model_opts(model_opt)
     vocab = checkpoint['vocab']
+
+    model_opt.fasttext = opt.fasttext
+
     if inputters.old_style_vocab(vocab):
         fields = inputters.load_old_vocab(
             vocab, opt.data_type, dynamic_dict=model_opt.copy_attn
@@ -166,6 +169,8 @@ def build_base_model(model_opt, fields, gpu, checkpoint=None, gpu_id=None):
     # FASTTEXT
     ft_embedder = None
     if model_opt.fasttext:
+        logger.info("Using dynamic fastText embeddings from: '{}''".format(
+            model_opt.fasttext))
         ft_embedder = fasttext.load_model(model_opt.fasttext)
 
     # Build NMTModel(= encoder + decoder).
