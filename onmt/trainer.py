@@ -336,7 +336,6 @@ class Trainer(object):
 
         for k, batch in enumerate(true_batches):
             batch, raw_batch = batch
-            print(raw_batch[0].__dict__)
             target_size = batch.tgt.size(0)
             # Truncated BPTT: reminder not compatible with accum > 1
             if self.trunc_size:
