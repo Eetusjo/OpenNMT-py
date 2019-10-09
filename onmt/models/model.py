@@ -43,10 +43,9 @@ class NMTModel(nn.Module):
         tgt = tgt[:-1]  # exclude last target from inputs
 
         if useft and self.ft_embedder and (raw is not None):
-            ft_embeddings, ft_mask = fte.get_ft_emb_and_mask(
+            ft_embeddings, ft_mask = self.ft_embedder.get_ft_emb_and_mask(
                 src, raw,
                 vec_dim=self.encoder.embeddings.__dict__["word_vec_size"],
-                embedder=self.ft_embedder,
                 device=src.device
             )
         else:

@@ -30,8 +30,12 @@ def model_opts(parser):
     group.add('--word_vec_size', '-word_vec_size', type=int, default=-1,
               help='Word embedding size for src and tgt.')
 
-    group.add('--fasttext', '-fasttext', type=str, default=None,
+    group.add('--fasttext', '-fasttext', type=str, nargs="+", default=None,
               help="Path to fasttext model for on-the-fly OOV embeddings.")
+    group.add('--fasttext_langs', '-fasttext_langs', type=str,
+              nargs="+", default=None,
+              help="Language ids for fasttext models. Give in the same order "
+                   "as models (with --fasttext).")
 
     group.add('--share_decoder_embeddings', '-share_decoder_embeddings',
               action='store_true',

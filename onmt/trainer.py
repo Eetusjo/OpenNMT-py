@@ -329,13 +329,14 @@ class Trainer(object):
 
         return stats
 
-    def _gradient_accumulation(self, true_batches, normalization, total_stats,
-                               report_stats):
+    def _gradient_accumulation(self, true_batches, normalization,
+                               total_stats, report_stats):
         if self.accum_count > 1:
             self.optim.zero_grad()
 
         for k, batch in enumerate(true_batches):
             batch, raw_batch = batch
+            print(raw_batch[0].__dict__)
             target_size = batch.tgt.size(0)
             # Truncated BPTT: reminder not compatible with accum > 1
             if self.trunc_size:
@@ -359,7 +360,9 @@ class Trainer(object):
                 if self.accum_count == 1:
                     self.optim.zero_grad()
                 outputs, attns = self.model(
-                    src, tgt, src_lengths, bptt=bptt, raw=raw_batch, useft=True)
+                    src, tgt, src_lengths, bptt=bptt,
+                    raw=raw_batch, useft=True
+                )
                 bptt = True
 
                 # 3. Compute loss.

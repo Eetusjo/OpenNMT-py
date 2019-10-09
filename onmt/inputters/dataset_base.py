@@ -128,7 +128,11 @@ class Dataset(TorchtextDataset):
                 self.src_vocabs.append(src_ex_vocab)
             ex_fields = {k: [(k, v)] for k, v in fields.items() if
                          k in ex_dict}
+
             ex = Example.fromdict(ex_dict, ex_fields)
+            if "srclang" in ex_dict:
+                ex.srclang = ex_dict["srclang"]
+
             examples.append(ex)
 
         # fields needs to have only keys that examples have as attrs

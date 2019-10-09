@@ -20,6 +20,8 @@ from onmt.utils.misc import use_gpu
 from onmt.utils.logging import logger
 from onmt.utils.parse import ArgumentParser
 
+from onmt.modules import fasttext_embedder
+
 
 def build_embeddings(opt, text_field, for_encoder=True):
     """
@@ -101,6 +103,7 @@ def load_test_model(opt, model_path=None):
     vocab = checkpoint['vocab']
 
     model_opt.fasttext = opt.fasttext
+    model_opt.fasttext_langs = opt.fasttext_langs
 
     if inputters.old_style_vocab(vocab):
         fields = inputters.load_old_vocab(
@@ -169,9 +172,7 @@ def build_base_model(model_opt, fields, gpu, checkpoint=None, gpu_id=None):
     # FASTTEXT
     ft_embedder = None
     if model_opt.fasttext:
-        logger.info("Using dynamic fastText embeddings from: '{}''".format(
-            model_opt.fasttext))
-        ft_embedder = fasttext.load_model(model_opt.fasttext)
+        ft_embedder = fasttext_embedder.build_ft_embedder(model_opt)
 
     # Build NMTModel(= encoder + decoder).
     if gpu and gpu_id is not None:

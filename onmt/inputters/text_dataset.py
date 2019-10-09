@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from functools import partial
 
+import re
 import six
 import torch
 from torchtext.data import Field, RawField
@@ -32,7 +33,14 @@ class TextDataReader(DataReaderBase):
         for i, seq in enumerate(sequences):
             if isinstance(seq, six.binary_type):
                 seq = seq.decode("utf-8")
-            yield {side: seq, "indices": i}
+
+            split = seq.split(" ")
+            m = re.match(r"<<(..)>>", split[0])
+            if m:
+                yield {side: " ".join(split[1:]), "indices": i, "srclang": m.group(1)}
+            else:
+                yield {side: seq, "indices": i}
+
 
 
 def text_sort_key(ex):
