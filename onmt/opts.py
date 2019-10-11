@@ -584,8 +584,12 @@ def translate_opts(parser):
                    "the log probabilities will be averaged directly. "
                    "Necessary for models whose output layers can assign "
                    "zero probability.")
-    group.add('--fasttext', '-fasttext', type=str, default=None,
+    group.add('--fasttext', '-fasttext', type=str, nargs="+", default=None,
               help="Path to fasttext model for on-the-fly OOV embeddings.")
+    group.add('--fasttext_langs', '-fasttext_langs', type=str,
+              nargs="+", default=None,
+              help="Language ids for fasttext models. Give in the same order "
+                   "as models (with --fasttext).")
 
     group = parser.add_argument_group('Data')
     group.add('--data_type', '-data_type', default="text",
