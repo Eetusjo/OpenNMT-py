@@ -550,10 +550,9 @@ class Translator(object):
                            else (batch.src, None)
 
         if self.model.ft_embedder and raw_batch:
-            ft_embeddings, ft_mask = fte.get_ft_emb_and_mask(
+            ft_embeddings, ft_mask = self.model.ft_embedder.get_ft_emb_and_mask(
                 src, raw_batch,
                 vec_dim=self.model.encoder.embeddings.__dict__["word_vec_size"],
-                embedder=self.model.ft_embedder,
                 device=src.device
             )
         else:

@@ -43,4 +43,8 @@ def build_ft_embedder(opt):
     for lang, model_path in zip(opt.fasttext_langs, opt.fasttext):
         models.append((lang, fasttext.load_model(model_path)))
 
+    logger.info("Managed to load models for: '{}''".format(
+        [lang for lang, _ in models]
+    ))
+
     return MultiFastTextEmbedder(models)
