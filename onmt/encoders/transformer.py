@@ -114,11 +114,14 @@ class TransformerEncoder(EncoderBase):
             embeddings,
             opt.max_relative_positions)
 
-    def forward(self, src, lengths=None):
+    def forward(self, src, lengths=None, ft_emb=None, ft_mask=None):
         """See :func:`EncoderBase.forward()`"""
         self._check_args(src, lengths)
 
         emb = self.embeddings(src)
+
+        if (ft_emb is not None) and (ft_mask is not None):
+            emb = emb*ft_mask + ft_emb*(1 - ft_mask)
 
         out = emb.transpose(0, 1).contiguous()
         mask = ~sequence_mask(lengths).unsqueeze(1)
