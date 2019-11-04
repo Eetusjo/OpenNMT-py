@@ -353,6 +353,7 @@ class Translator(object):
             translations = xlation_builder.from_batch(batch_data)
 
             for trans in translations:
+                sent_number = next(counter)
                 all_scores += [trans.pred_scores[:self.n_best]]
                 pred_score_total += trans.pred_scores[0]
                 pred_words_total += len(trans.pred_sents[0])
@@ -363,7 +364,11 @@ class Translator(object):
                 n_best_preds = [" ".join(pred)
                                 for pred in trans.pred_sents[:self.n_best]]
                 all_predictions += [n_best_preds]
-                self.out_file.write('\n'.join(n_best_preds) + '\n')
+
+                for i, pred in enumerate(n_best_preds):
+                    self.out_file.write('{}\t{}\t{}\n'.format(
+                        sent_number, pred, trans.pred_scores[i]
+                    ))
                 self.out_file.flush()
 
                 if self.verbose:
